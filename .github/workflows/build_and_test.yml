@@ -8,27 +8,7 @@ on:
       - '.github/**'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # full clone for versioning calculation
-
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 7.x
-
-    - name: Install dependencies
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-
-  test:
-    needs: build
+  build-and-test:
     runs-on: ubuntu-latest
 
     services:
@@ -57,8 +37,14 @@ jobs:
       with:
         dotnet-version: 7.x
 
+    - name: Install dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
     - name: Test
-      run: dotnet test --verbosity normal
+      run: dotnet test --no-restore --verbosity normal
       env:
         Db__host: "localhost"
         Db__port: "5432"
