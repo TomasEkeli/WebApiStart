@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using static System.Environment;
 
 namespace Backend.Tests;
 
@@ -16,6 +17,8 @@ namespace Backend.Tests;
 public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
 {
     const string default_host = "db";
+    const string default_port = "5432";
+    const string default_database = "postgres";
     const string default_username = "postgres";
     const string default_password = "postgres";
 
@@ -24,11 +27,7 @@ public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        using var connection = new NpgsqlConnection(
-            $"Host={default_host};" +
-            $"Username={default_username};" +
-            $"Password={default_password};"
-        );
+        using var connection = new NpgsqlConnection(GetConnectionString());
 
         connection.Execute($"create database {Database_name};");
         connection.Close();
@@ -48,11 +47,7 @@ public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
     {
         try
         {
-            using var connection = new NpgsqlConnection(
-                $"Host={default_host};" +
-                $"Username={default_username};" +
-                $"Password={default_password};"
-            );
+            using var connection = new NpgsqlConnection(GetConnectionString());
 
             await connection.ExecuteAsync(
                 $"drop database {Database_name} with (force);");
@@ -76,5 +71,25 @@ public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
     {
         DropDatabase().Wait();
         base.Dispose(disposing);
+    }
+
+    static string GetConnectionString()
+    {
+        // Environment-variables take precedence
+
+        var host = GetEnvironmentVariable("AdminDb__host") ?? default_host;
+        var port = GetEnvironmentVariable("AdminDb__port") ?? default_port;
+        var database = GetEnvironmentVariable("AdminDb__database")
+            ?? default_database;
+        var username = GetEnvironmentVariable("AdminDb__username")
+            ?? default_username;
+        var password = GetEnvironmentVariable("AdminDb__password")
+            ?? default_password;
+
+        return $"Host={host};" +
+            $"Port={port};" +
+            $"Username={username};" +
+            $"Password={password};" +
+            $"Database={database};";
     }
 }
