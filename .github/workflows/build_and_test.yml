@@ -58,7 +58,7 @@ jobs:
         dotnet-version: 7.x
 
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --verbosity normal
       env:
         Db__host: "localhost"
         Db__port: "5432"
