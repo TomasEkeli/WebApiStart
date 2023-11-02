@@ -5,9 +5,24 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
+
+    services:
+      # outside-in tests require a running postgres instance
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options:
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
     - uses: actions/checkout@v2
@@ -27,3 +42,14 @@ jobs:
 
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+      env:
+        Db__host: "localhost"
+        Db__port: "5432"
+        Db__database: "my_db"
+        Db__username: "postgres"
+        Db__password: "postgres"
+        AdminDb__host: "localhost"
+        AdminDb__port: "5432"
+        AdminDb__database: "postgres"
+        AdminDb__username: "postgres"
+        AdminDb__password: "postgres"
