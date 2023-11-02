@@ -24,6 +24,10 @@ cd src/Backend
 dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer -c Release
 ```
 
+## Versioning
+
+[NerdBank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) has been added to the project. This means that the version is automatically updated based on the git history. Control the main numbers of the version in the file `version.json`, in the root of the repository.
+
 ## TODO
 - [x] ~~Dockerfile~~ Set up docker publish for the Backend
 - [ ] Github actions
