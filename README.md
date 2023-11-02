@@ -17,8 +17,15 @@ This is a repository with the basic setup:
 
 GPLv3 - see LICENSE file. This is a template repository, if the license does not work for you - talk to me or create your own repository from scratch.
 
+## Publish command
+
+```bash
+cd src/Backend
+dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer -c Release
+```
+
 ## TODO
-- [ ] Dockerfile for the Backend
+- [x] ~~Dockerfile~~ Set up docker publish for the Backend
 - [ ] Github actions
 - [ ] OpenTelemetry setup
 - [ ] Documentation -templates

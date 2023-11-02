@@ -8,6 +8,14 @@
     <DefaultNamespace>Backend</DefaultNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <ContainerRepository>Backend</ContainerRepository>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:7.0</ContainerBaseImage>
+    <ContainerRuntimeIdentifier>linux-x64</ContainerRuntimeIdentifier>
+    <ContainerImageTags>$(Version);latest</ContainerImageTags>
+    <ContainerPort>80</ContainerPort>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="dapper" Version="2.1.15" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
