@@ -9,9 +9,7 @@ builder.Services.Configure<DbSettings>(
 builder.Services.Configure<AdminDbSettings>(
     builder.Configuration.GetSection(key: AdminDbSettings.Section));
 
-// builder.UseOtelLogging();
-// builder.UseOtelTracing();
-builder.UseOtelMetrics();
+builder.EnableOpenTelemetry();
 
 // Add services to the container.
 builder.Services.AddControllers();

@@ -7,7 +7,17 @@ namespace Backend;
 
 public static class OpenTelemetryExtensions
 {
-    public static WebApplicationBuilder UseOtelLogging(
+    public static WebApplicationBuilder EnableOpenTelemetry(
+        this WebApplicationBuilder builder)
+    {
+        builder.LogWithOtel();
+        builder.TraceWithOtel();
+        builder.ExportMetricsWithOthel();
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder LogWithOtel(
         this WebApplicationBuilder builder)
     {
         builder.Logging.ClearProviders();
@@ -31,7 +41,7 @@ public static class OpenTelemetryExtensions
         return builder;
     }
 
-    public static WebApplicationBuilder UseOtelTracing(
+    public static WebApplicationBuilder TraceWithOtel(
         this WebApplicationBuilder builder)
     {
         builder.Services
@@ -51,7 +61,7 @@ public static class OpenTelemetryExtensions
         return builder;
     }
 
-    public static WebApplicationBuilder UseOtelMetrics(
+    public static WebApplicationBuilder ExportMetricsWithOthel(
         this WebApplicationBuilder builder)
     {
         builder.Services
