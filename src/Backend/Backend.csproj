@@ -23,6 +23,7 @@
     <PackageReference Include="npgsql.opentelemetry" Version="7.0.6" />
     <PackageReference Include="opentelemetry" Version="1.6.0" />
     <PackageReference Include="opentelemetry.exporter.console" Version="1.6.0" />
+    <PackageReference Include="opentelemetry.exporter.opentelemetryprotocol" Version="1.6.0" />
     <PackageReference Include="opentelemetry.extensions.hosting" Version="1.6.0" />
     <PackageReference Include="opentelemetry.instrumentation.aspnetcore" Version="1.6.0-beta.2" />
     <PackageReference Include="opentelemetry.instrumentation.http" Version="1.6.0-beta.2" />
