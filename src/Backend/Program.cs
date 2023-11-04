@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Backend;
 using Backend.Db;
 
@@ -8,7 +9,8 @@ builder.Services.Configure<DbSettings>(
 builder.Services.Configure<AdminDbSettings>(
     builder.Configuration.GetSection(key: AdminDbSettings.Section));
 
-builder.UseOtelLogging();
+// builder.UseOtelLogging();
+builder.UseOtelTracing();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -24,6 +26,8 @@ builder.Services
         .AddCheck<DatabaseAvailableHealthCheck>("Database");
 
 var app = builder.Build();
+
+app.MapGet("/", () => $"Hello World! OpenTelemetry trace: {Activity.Current?.TraceId}");
 
 app.UseSwagger();
 app.UseSwaggerUI();

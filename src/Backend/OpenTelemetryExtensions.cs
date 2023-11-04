@@ -1,5 +1,6 @@
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace Backend;
 
@@ -25,6 +26,26 @@ public static class OpenTelemetryExtensions
                     .AddConsoleExporter();
             }
         );
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder UseOtelTracing(
+        this WebApplicationBuilder builder)
+    {
+        builder.Services
+            .AddOpenTelemetry()
+            .ConfigureResource(builder =>
+                builder
+                    .AddService(DiagnosticsConfig.Name)
+                )
+            .WithTracing(tracing =>
+                tracing
+                    .AddAspNetCoreInstrumentation()
+                    // TODO: only for demo purposes, remove in production and add
+                    // "real world" exporters like OTLP, zipkin, jaeger, etc.
+                    .AddConsoleExporter()
+            );
 
         return builder;
     }
