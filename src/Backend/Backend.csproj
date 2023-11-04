@@ -20,10 +20,12 @@
     <PackageReference Include="dapper" Version="2.1.15" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
     <PackageReference Include="npgsql" Version="7.0.6" />
+    <PackageReference Include="npgsql.opentelemetry" Version="7.0.6" />
     <PackageReference Include="opentelemetry" Version="1.6.0" />
     <PackageReference Include="opentelemetry.exporter.console" Version="1.6.0" />
     <PackageReference Include="opentelemetry.extensions.hosting" Version="1.6.0" />
     <PackageReference Include="opentelemetry.instrumentation.aspnetcore" Version="1.6.0-beta.2" />
+    <PackageReference Include="opentelemetry.instrumentation.http" Version="1.6.0-beta.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 

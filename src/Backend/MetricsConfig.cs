@@ -18,4 +18,10 @@ public static class MetricsConfig
             name: "users.count",
             unit: "users",
             description: "the number of users registered");
+
+    public static readonly Counter<int> Orders = Meter
+        .CreateCounter<int>(
+            name: "sales.orders.count",
+            unit: "orders",
+            description: "the number of orders made");
 }
