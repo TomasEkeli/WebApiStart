@@ -1,4 +1,5 @@
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -45,6 +46,31 @@ public static class OpenTelemetryExtensions
                     // TODO: only for demo purposes, remove in production and add
                     // "real world" exporters like OTLP, zipkin, jaeger, etc.
                     .AddConsoleExporter()
+            );
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder UseOtelMetrics(
+        this WebApplicationBuilder builder)
+    {
+        builder.Services
+            .AddOpenTelemetry()
+            .ConfigureResource(builder =>
+                builder
+                    .AddService(DiagnosticsConfig.Name)
+                )
+            .WithMetrics(metrics =>
+                metrics.AddAspNetCoreInstrumentation()
+                // TODO: only for demo purposes, remove in production and add
+                // "real world" exporters like OTLP, zipkin, jaeger, etc.
+                .AddConsoleExporter((_, metric_reader_options) =>
+                {
+                    metric_reader_options
+                        .PeriodicExportingMetricReaderOptions
+                        .ExportIntervalMilliseconds = 10000;
+                }
+                )
             );
 
         return builder;
