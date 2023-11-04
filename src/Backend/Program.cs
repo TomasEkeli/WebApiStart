@@ -1,3 +1,4 @@
+using Backend;
 using Backend.Db;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,8 @@ builder.Services.Configure<DbSettings>(
     builder.Configuration.GetSection(key: DbSettings.Section));
 builder.Services.Configure<AdminDbSettings>(
     builder.Configuration.GetSection(key: AdminDbSettings.Section));
+
+builder.UseOtelLogging();
 
 // Add services to the container.
 builder.Services.AddControllers();
