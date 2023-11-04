@@ -12,13 +12,15 @@ public static class OpenTelemetryExtensions
      * <summary>
      * Enables tracing, logging and metrics with OpenTelemetry.
      * </summary>
+     * <param name="exportToConsole">will fill the console with text</param>
      */
     public static WebApplicationBuilder EnableOpenTelemetry(
-        this WebApplicationBuilder builder)
+        this WebApplicationBuilder builder,
+        bool exportToConsole = true)
     {
-        builder.TraceWithOtel();
-        builder.LogWithOtel();
-        builder.ExportMetricsWithOthel();
+        builder.TraceWithOtel(exportToConsole);
+        builder.LogWithOtel(exportToConsole);
+        builder.ExportMetricsWithOthel(exportToConsole);
 
         return builder;
     }
@@ -26,19 +28,20 @@ public static class OpenTelemetryExtensions
     /**
      * <summary>
      * <para>
-     * Replace the default logging provider with OpenTelemetry-logging.
+     * Adds OpenTelemetry logging to the application.
      * </para><para>
-     * After calling this method, the default logging provider is removed and
-     * logging is done with OpenTelemetry. This means that the logs will contain
-     * the application-name and other properties in a standard format, and that
-     * the logs will be exported to the configured log-exporter.
+     * After calling this method, the default logging provider will remain, but
+     * logging is aslo done with OpenTelemetry. This means that the logs with
+     * the application-name and other properties in a standard format are produced
+     * and exported to the configured exporters (otlp and possibly console).
      * </para>
      * </summary>
      */
     public static WebApplicationBuilder LogWithOtel(
-        this WebApplicationBuilder builder)
+        this WebApplicationBuilder builder,
+        bool exportToConsole = true)
     {
-        builder.Logging.ClearProviders();
+        // builder.Logging.ClearProviders();
 
         builder.Logging.AddOpenTelemetry(logging =>
             {
@@ -50,9 +53,12 @@ public static class OpenTelemetryExtensions
 
                 logging
                     .SetResourceBuilder(resourceBuilder)
-                    // TODO: only for demo purposes, remove in production and add
-                    // "real world" exporters like OTLP, zipkin, jaeger, etc.
-                    .AddConsoleExporter();
+                    .AddOtlpExporter();
+
+                if (exportToConsole)
+                {
+                    logging.AddConsoleExporter();
+                }
             }
         );
 
@@ -71,7 +77,8 @@ public static class OpenTelemetryExtensions
      * </summary>
      */
     public static WebApplicationBuilder TraceWithOtel(
-        this WebApplicationBuilder builder)
+        this WebApplicationBuilder builder,
+        bool exportToConsole = true)
     {
         builder.Services
             .AddOpenTelemetry()
@@ -80,15 +87,20 @@ public static class OpenTelemetryExtensions
                     .AddService(DiagnosticsConfig.Name)
                 )
             .WithTracing(tracing =>
-                tracing
-                    .AddAspNetCoreInstrumentation(
-                        options => options.Filter = (httpContext) => httpContext.Request.Path != "/healthz"
-                    )
-                    .AddHttpClientInstrumentation()
-                    .AddNpgsql()
-                    // TODO: only for demo purposes, remove in production and add
-                    // "real world" exporters like OTLP, zipkin, jaeger, etc.
-                    .AddConsoleExporter()
+                {
+                    tracing
+                        .AddAspNetCoreInstrumentation(opt =>
+                            opt.Filter = ctx => ctx.Request.Path != "/healthz"
+                        )
+                        .AddHttpClientInstrumentation()
+                        .AddNpgsql()
+                        .AddOtlpExporter();
+
+                    if (exportToConsole)
+                    {
+                        tracing.AddConsoleExporter();
+                    }
+                }
             );
 
         return builder;
@@ -114,7 +126,8 @@ public static class OpenTelemetryExtensions
      * </summary>
      */
     public static WebApplicationBuilder ExportMetricsWithOthel(
-        this WebApplicationBuilder builder)
+        this WebApplicationBuilder builder,
+        bool exportToConsole = true)
     {
         builder.Services
             .AddOpenTelemetry()
@@ -123,18 +136,24 @@ public static class OpenTelemetryExtensions
                     .AddService(DiagnosticsConfig.Name)
                 )
             .WithMetrics(metrics =>
-                metrics
-                    .AddAspNetCoreInstrumentation()
-                    .AddMeter(MetricsConfig.Meter.Name)
-                    // TODO: only for demo purposes, remove in production and add
-                    // "real world" exporters like OTLP, zipkin, jaeger, etc.
-                    .AddConsoleExporter((_, metric_reader_options) =>
+                {
+                    metrics
+                        .AddAspNetCoreInstrumentation()
+                        .AddMeter(MetricsConfig.Meter.Name)
+                        .AddOtlpExporter();
+
+                    if (exportToConsole)
                     {
-                        metric_reader_options
-                            .PeriodicExportingMetricReaderOptions
-                            .ExportIntervalMilliseconds = 10000;
+                        metrics
+                            .AddConsoleExporter((_, metric_reader_options) =>
+                            {
+                                metric_reader_options
+                                    .PeriodicExportingMetricReaderOptions
+                                    .ExportIntervalMilliseconds = 10000;
+                            }
+                        );
                     }
-                )
+                }
             );
 
         return builder;
