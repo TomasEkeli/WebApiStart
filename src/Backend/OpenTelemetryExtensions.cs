@@ -8,6 +8,8 @@ namespace Backend;
 
 public static class OpenTelemetryExtensions
 {
+    const string OtlpEndpoint = "http://otel-collector:4317";
+
     /**
      * <summary>
      * Enables tracing, logging and metrics with OpenTelemetry.
@@ -53,7 +55,9 @@ public static class OpenTelemetryExtensions
 
                 logging
                     .SetResourceBuilder(resourceBuilder)
-                    .AddOtlpExporter();
+                    .AddOtlpExporter(opt =>
+                        opt.Endpoint = new Uri(OtlpEndpoint)
+                    );
 
                 if (exportToConsole)
                 {
@@ -94,7 +98,9 @@ public static class OpenTelemetryExtensions
                         )
                         .AddHttpClientInstrumentation()
                         .AddNpgsql()
-                        .AddOtlpExporter();
+                        .AddOtlpExporter(opt =>
+                            opt.Endpoint = new Uri(OtlpEndpoint)
+                        );
 
                     if (exportToConsole)
                     {
@@ -140,7 +146,9 @@ public static class OpenTelemetryExtensions
                     metrics
                         .AddAspNetCoreInstrumentation()
                         .AddMeter(MetricsConfig.Meter.Name)
-                        .AddOtlpExporter();
+                        .AddOtlpExporter(opt =>
+                            opt.Endpoint = new Uri(OtlpEndpoint)
+                        );
 
                     if (exportToConsole)
                     {

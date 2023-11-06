@@ -9,7 +9,7 @@ builder.Services.Configure<DbSettings>(
 builder.Services.Configure<AdminDbSettings>(
     builder.Configuration.GetSection(key: AdminDbSettings.Section));
 
-builder.EnableOpenTelemetry(exportToConsole: false);
+builder.EnableOpenTelemetry(exportToConsole: true);
 
 // Add services to the container.
 builder.Services.AddControllers();
