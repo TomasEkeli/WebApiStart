@@ -4,12 +4,14 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Exporter;
+using static Backend.DiagnosticsConfig.Attributes;
+using Microsoft.Extensions.Options;
 
 namespace Backend;
 
 public static class OpenTelemetryExtensions
 {
-    const string OtlpEndpoint = "http://otel-collector:4317";
+    static TelemetryConfig? _config;
 
     /**
      * <summary>
@@ -21,6 +23,9 @@ public static class OpenTelemetryExtensions
         this WebApplicationBuilder builder,
         bool exportToConsole = true)
     {
+        builder.ConfigureTelemetry();
+        _config = builder.GetTelemetryConfig();
+
         builder.TraceWithOtel(exportToConsole);
         builder.LogWithOtel(exportToConsole);
         builder.ExportMetricsWithOthel(exportToConsole);
@@ -47,27 +52,25 @@ public static class OpenTelemetryExtensions
         // builder.Logging.ClearProviders();
 
         builder.Logging.AddOpenTelemetry(logging =>
+        {
+            logging.IncludeFormattedMessage = true;
+            logging.IncludeScopes = true;
+            logging.ParseStateValues = true;
+
+            var resourceBuilder = ResourceBuilder
+                .CreateDefault()
+                .AddServiceWithAttributes(builder.Environment);
+
+            logging
+                .SetResourceBuilder(resourceBuilder)
+                .AddProcessor(new ConvertLogRecordsToEvents())
+                .AddOtlpExporter(_ => _.ExportToConfigured());
+
+            if (exportToConsole)
             {
-                logging.IncludeScopes = true;
-
-                var resourceBuilder = ResourceBuilder
-                    .CreateDefault()
-                    .AddService(DiagnosticsConfig.Name);
-
-                logging
-                    .SetResourceBuilder(resourceBuilder)
-                    .AddOtlpExporter(opt =>
-                        {
-                            opt.Endpoint = new Uri(OtlpEndpoint);
-                            opt.Protocol = OtlpExportProtocol.Grpc;
-                        }
-                    );
-
-                if (exportToConsole)
-                {
-                    logging.AddConsoleExporter();
-                }
+                logging.AddConsoleExporter();
             }
+        }
         );
 
         return builder;
@@ -85,35 +88,35 @@ public static class OpenTelemetryExtensions
      * </summary>
      */
     public static WebApplicationBuilder TraceWithOtel(
-        this WebApplicationBuilder builder,
+        this WebApplicationBuilder appBuilder,
         bool exportToConsole = true)
     {
-        builder.Services
+        appBuilder.Services
             .AddOpenTelemetry()
-            .ConfigureResource(builder =>
-                builder
-                    .AddService(DiagnosticsConfig.Name)
+            .ConfigureResource(otel =>
+                otel
+                    .AddServiceWithAttributes(appBuilder.Environment)
                 )
             .WithTracing(tracing =>
-                {
-                    tracing
-                        .AddAspNetCoreInstrumentation(opt =>
-                            opt.Filter = ctx => ctx.Request.Path != "/healthz"
-                        )
-                        .AddHttpClientInstrumentation()
-                        .AddNpgsql()
-                        .AddOtlpExporter(opt =>
-                            opt.Endpoint = new Uri(OtlpEndpoint)
-                        );
-
-                    if (exportToConsole)
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation(opt =>
                     {
-                        tracing.AddConsoleExporter();
+                        opt.Filter = ctx => ctx.Request.Path != "/healthz";
                     }
+                    )
+                    .AddHttpClientInstrumentation()
+                    .AddNpgsql()
+                    .AddOtlpExporter(_ => _.ExportToConfigured());
+
+                if (exportToConsole)
+                {
+                    tracing.AddConsoleExporter();
                 }
+            }
             );
 
-        return builder;
+        return appBuilder;
     }
 
     /**
@@ -136,38 +139,91 @@ public static class OpenTelemetryExtensions
      * </summary>
      */
     public static WebApplicationBuilder ExportMetricsWithOthel(
-        this WebApplicationBuilder builder,
+        this WebApplicationBuilder appBuilder,
         bool exportToConsole = true)
     {
-        builder.Services
+        appBuilder.Services
             .AddOpenTelemetry()
-            .ConfigureResource(builder =>
-                builder
-                    .AddService(DiagnosticsConfig.Name)
+            .ConfigureResource(otel =>
+                otel
+                    .AddServiceWithAttributes(appBuilder.Environment)
                 )
             .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddMeter(MetricsConfig.Meter.Name)
+                    .AddOtlpExporter(_ => ExportToConfigured(_));
+
+                if (exportToConsole)
                 {
                     metrics
-                        .AddAspNetCoreInstrumentation()
-                        .AddMeter(MetricsConfig.Meter.Name)
-                        .AddOtlpExporter(opt =>
-                            opt.Endpoint = new Uri(OtlpEndpoint)
-                        );
+                        .AddConsoleExporter((_, metric_reader_options) =>
+                        {
+                            metric_reader_options
+                                .PeriodicExportingMetricReaderOptions
+                                .ExportIntervalMilliseconds = 10000;
+                        }
+                    );
+                }
+            }
+            );
 
-                    if (exportToConsole)
-                    {
-                        metrics
-                            .AddConsoleExporter((_, metric_reader_options) =>
-                            {
-                                metric_reader_options
-                                    .PeriodicExportingMetricReaderOptions
-                                    .ExportIntervalMilliseconds = 10000;
-                            }
-                        );
-                    }
+        return appBuilder;
+    }
+
+    static ResourceBuilder AddServiceWithAttributes(
+        this ResourceBuilder builder,
+        IWebHostEnvironment environment) =>
+        builder
+            .AddService(DiagnosticsConfig.Name)
+            .AddAttributes(
+                new KeyValuePair<string, object>[]
+                {
+                    new(Service.Host, Environment.MachineName),
+                    new(Service.Environment, environment.EnvironmentName),
+                    new(Service.Version, CurrentVersion())
                 }
             );
 
+    static string CurrentVersion()
+    {
+        return typeof(OpenTelemetryExtensions)
+            .Assembly
+            .GetName()
+            .Version
+            ?.ToString()
+            ?? "unknown";
+    }
+
+    static WebApplicationBuilder ConfigureTelemetry(
+        this WebApplicationBuilder builder)
+    {
+        builder
+            .Services
+            .AddOptions<TelemetryConfig>()
+            .Bind(builder.Configuration.GetSection(TelemetryConfig.Section))
+            .ValidateDataAnnotations();
+
         return builder;
+    }
+
+    static TelemetryConfig GetTelemetryConfig(
+        this WebApplicationBuilder builder) =>
+        builder
+            .Services
+            .BuildServiceProvider()
+            .GetRequiredService<IOptions<TelemetryConfig>>()
+            .Value;
+
+    static OtlpExporterOptions ExportToConfigured(
+        this OtlpExporterOptions options)
+    {
+        if (_config?.ExporterEndpoint is not null)
+        {
+            options.Endpoint = new Uri(_config.ExporterEndpoint);
+        }
+
+        return options;
     }
 }

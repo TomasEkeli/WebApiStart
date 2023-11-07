@@ -31,6 +31,6 @@ dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer -c Relea
 ## TODO
 - [x] ~~Dockerfile~~ Set up docker publish for the Backend
 - [x] Github action
-- [ ] OpenTelemetry setup
+- [x] OpenTelemetry setup
 - [ ] Documentation -templates
 - [x] Architectural decision records -templates

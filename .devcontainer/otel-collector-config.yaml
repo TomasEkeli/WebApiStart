@@ -38,3 +38,4 @@ service:
         - otlp
       exporters:
         - logging
+        - otlp
