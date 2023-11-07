@@ -1,10 +1,10 @@
 using System.Diagnostics.Metrics;
 
-namespace Backend;
+namespace Backend.Telemetry;
 
 public static class MetricsConfig
 {
-    public static readonly Meter Meter = new(DiagnosticsConfig.Name);
+    public static readonly Meter Meter = new(TelemetryConfig.Name);
 
     // example metrics we can add values to (change these to match your app's needs)
     public static readonly Histogram<double> SalesValue =

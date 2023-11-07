@@ -1,6 +1,6 @@
 namespace Backend;
 
-public static class DiagnosticsConfig
+public static class TelemetryConfig
 {
     public const string Name = "Backend"; // TODO: replace with your app name
 

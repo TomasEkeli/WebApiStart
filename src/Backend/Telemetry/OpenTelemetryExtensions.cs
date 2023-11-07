@@ -4,14 +4,14 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Exporter;
-using static Backend.DiagnosticsConfig.Attributes;
+using static Backend.TelemetryConfig.Attributes;
 using Microsoft.Extensions.Options;
 
-namespace Backend;
+namespace Backend.Telemetry;
 
 public static class OpenTelemetryExtensions
 {
-    static TelemetryConfig? _config;
+    static OpenTelemetryExportConfig? _config;
 
     /**
      * <summary>
@@ -101,9 +101,7 @@ public static class OpenTelemetryExtensions
             {
                 tracing
                     .AddAspNetCoreInstrumentation(opt =>
-                    {
-                        opt.Filter = ctx => ctx.Request.Path != "/healthz";
-                    }
+                        opt.Filter = ctx => ctx.Request.Path != "/healthz"
                     )
                     .AddHttpClientInstrumentation()
                     .AddNpgsql()
@@ -176,7 +174,7 @@ public static class OpenTelemetryExtensions
         this ResourceBuilder builder,
         IWebHostEnvironment environment) =>
         builder
-            .AddService(DiagnosticsConfig.Name)
+            .AddService(TelemetryConfig.Name)
             .AddAttributes(
                 new KeyValuePair<string, object>[]
                 {
@@ -201,27 +199,27 @@ public static class OpenTelemetryExtensions
     {
         builder
             .Services
-            .AddOptions<TelemetryConfig>()
-            .Bind(builder.Configuration.GetSection(TelemetryConfig.Section))
+            .AddOptions<OpenTelemetryExportConfig>()
+            .Bind(builder.Configuration.GetSection(OpenTelemetryExportConfig.Section))
             .ValidateDataAnnotations();
 
         return builder;
     }
 
-    static TelemetryConfig GetTelemetryConfig(
+    static OpenTelemetryExportConfig GetTelemetryConfig(
         this WebApplicationBuilder builder) =>
         builder
             .Services
             .BuildServiceProvider()
-            .GetRequiredService<IOptions<TelemetryConfig>>()
+            .GetRequiredService<IOptions<OpenTelemetryExportConfig>>()
             .Value;
 
     static OtlpExporterOptions ExportToConfigured(
         this OtlpExporterOptions options)
     {
-        if (_config?.ExporterEndpoint is not null)
+        if (_config?.Endpoint is not null)
         {
-            options.Endpoint = new Uri(_config.ExporterEndpoint);
+            options.Endpoint = new Uri(_config.Endpoint);
         }
 
         return options;

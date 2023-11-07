@@ -1,21 +1,8 @@
 using System.Diagnostics;
-using OpenTelemetry;
 using OpenTelemetry.Logs;
-using static Backend.DiagnosticsConfig.Attributes;
+using static Backend.TelemetryConfig.Attributes;
 
-namespace Backend;
-public class ConvertLogRecordsToEvents : BaseProcessor<LogRecord>
-{
-    public override void OnEnd(LogRecord data)
-    {
-        if (data is null)
-        {
-            return;
-        }
-
-        Activity.Current?.AddEvent(data.ToActivityEvent());
-    }
-}
+namespace Backend.Telemetry;
 
 public static class LogRecordExtensions
 {
