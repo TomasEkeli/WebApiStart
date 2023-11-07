@@ -3,6 +3,7 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Exporter;
 
 namespace Backend;
 
@@ -56,7 +57,10 @@ public static class OpenTelemetryExtensions
                 logging
                     .SetResourceBuilder(resourceBuilder)
                     .AddOtlpExporter(opt =>
-                        opt.Endpoint = new Uri(OtlpEndpoint)
+                        {
+                            opt.Endpoint = new Uri(OtlpEndpoint);
+                            opt.Protocol = OtlpExportProtocol.Grpc;
+                        }
                     );
 
                 if (exportToConsole)

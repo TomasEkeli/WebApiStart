@@ -5,6 +5,12 @@ receivers:
       http:
 
 exporters:
+  logging:
+    loglevel: debug
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
   prometheus:
     endpoint: "0.0.0.0:8889"
     namespace: backend
@@ -17,6 +23,18 @@ exporters:
 
 service:
   pipelines:
+    traces:
+      receivers:
+        - otlp
+      exporters:
+        - otlp
     metrics:
-      receivers: [otlp]
-      exporters: [prometheus]
+      receivers:
+        - otlp
+      exporters:
+        - prometheus
+    logs:
+      receivers:
+        - otlp
+      exporters:
+        - logging
