@@ -4,7 +4,7 @@ using Backend.Telemetry;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.EnableOpenTelemetry(exportToConsole: true);
+builder.EnableOpenTelemetry(exportToConsole: false);
 builder.ConfigureDatabaseConnection();
 
 // Add services to the container.
