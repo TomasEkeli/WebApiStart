@@ -45,17 +45,53 @@ public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
 
     public async Task DropDatabase()
     {
+        using var connection = new NpgsqlConnection(GetConnectionString());
         try
         {
-            using var connection = new NpgsqlConnection(GetConnectionString());
+            var drop_if_exists = $@"
+                drop database if exists {Database_name} with (force);
+            ";
 
-            await connection.ExecuteAsync(
-                $"drop database {Database_name} with (force);");
-            connection.Close();
+            await connection.ExecuteAsync(drop_if_exists);
         }
         catch (PostgresException ex) when (ex.SqlState == "3D000")
         {
             // already dropped - that's OK
+        }
+        finally
+        {
+            connection.Close();
+        }
+    }
+
+    /**
+     * <summary>
+     * use this to clean up after tests that create databases if needed
+     * </summary>
+     */
+    public async static Task DropAllTestDatabases()
+    {
+        using var connection = new NpgsqlConnection(GetConnectionString());
+        try
+        {
+            const string drop_if_exists = @"
+                select 'drop database if exists ' || datname || ' with (force);'
+                from pg_database
+                where datname like 'test_%';
+            ";
+
+            var drop_statements = await connection.QueryAsync<string>(
+                drop_if_exists
+            );
+
+            foreach (var drop_statement in drop_statements)
+            {
+                await connection.ExecuteAsync(drop_statement);
+            }
+        }
+        finally
+        {
+            connection.Close();
         }
     }
 
