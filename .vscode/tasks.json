@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/Backend/Backend.csproj",
+                "${workspaceFolder}/proj.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -26,16 +26,114 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "watch",
+            "label": "watch run Backend",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "watch",
                 "run",
+                "--configuration",
+                "LocalDev",
                 "--project",
                 "${workspaceFolder}/src/Backend/Backend.csproj"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": {
+                "owner": "csharp",
+                "source": "msCompile",
+                "applyTo": "closedDocuments",
+                "fileLocation": "absolute",
+                "pattern": {
+                  "regexp": "^(.*)\\((\\d+),(\\d+)\\):\\s+(error|warning|info)\\s+([A-Za-z0-9_]+)\\s*:\\s*(.*)$",
+                  "file": 1,
+                  "line": 2,
+                  "column": 3,
+                  "severity": 4,
+                  "code": 5,
+                  "message": 6
+                },
+                "background": {
+                  "activeOnStart": true,
+                  "beginsPattern": "^dotnet watch 🚀 Started$",
+                  "endsPattern": "^(The build failed|Starting up)"
+                }
+            }
+        },
+        {
+            "label": "test whole solution",
+            "command": "dotnet",
+            "type": "process",
+            "group": "test",
+            "presentation": {
+              "reveal": "silent",
+              "panel": "dedicated",
+              "close": true,
+              "group": "tests",
+              "focus": false,
+              "clear": true,
+              "echo": false,
+              "revealProblems": "onProblem",
+              "showReuseMessage": false,
+            },
+            "args": [
+              "test",
+              "${workspaceFolder}/proj.sln",
+              "--nologo",
+              "/property:GenerateFullPaths=true",
+              "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": {
+              "owner": "tests",
+              "fileLocation": "absolute",
+              "pattern": [
+                {
+                  "regexp": "^\\s*at (?:[^.]+\\.)+([^()]+)\\(\\) in (.*):line (\\d+)$",
+                  "message": 1,
+                  "file": 2,
+                  "line": 3,
+                }
+              ]
+            }
+        },
+        {
+            "label": "watch Backend.Tests",
+            "command": "dotnet",
+            "type": "process",
+            "group": "test",
+            "presentation": {
+              "reveal": "silent",
+              "panel": "dedicated",
+              "close": true,
+              "group": "tests",
+              "focus": false,
+              "clear": true,
+              "echo": false,
+              "revealProblems": "onProblem",
+              "showReuseMessage": false,
+            },
+            "isBackground": true,
+            "options": {
+              "cwd": "${workspaceFolder}/src/Backend.Tests"
+            },
+            "args": [
+              "watch",
+              "test",
+              // maybe ignore integration tests or something
+            ],
+            "problemMatcher": {
+              "owner": "Hosting.Tests",
+              "fileLocation": "absolute",
+              "pattern": {
+                "regexp": "^\\s*at (?:[^.]+\\.)+([^()]+)\\(\\) in (.*):line (\\d+)$",
+                "message": 1,
+                "file": 2,
+                "line": 3,
+              },
+              "background": {
+                "activeOnStart": true,
+                "beginsPattern": "Started",
+                "endsPattern": "Waiting for a file to change"
+              }
+            }
         }
     ]
 }

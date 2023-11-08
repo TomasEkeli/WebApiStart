@@ -28,6 +28,14 @@ dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer -c Relea
 
 [NerdBank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) has been added to the project. This means that the version is automatically updated based on the git history. Control the main numbers of the version in the file `version.json`, in the root of the repository.
 
+## Monitoring
+
+Running the devcontainer will set up an Otel -collector, Prometheus and Jaeger. With these you can monitor what happens in the application. You will find Prometheus at http://localhost:9090 and Jaeger at http://localhost:16686.
+
+## VSCode pleasantries
+
+Tasks have been set up to run tests and the application. With the task `watch run Backend` you will have a running application that you can connect the debugger to, and the task `watch test Backend.Tests` will run the tests for the Backend and watch for changes. Any failing tests will show up in the Problems tab.
+
 ## TODO
 - [x] ~~Dockerfile~~ Set up docker publish for the Backend
 - [x] Github action
