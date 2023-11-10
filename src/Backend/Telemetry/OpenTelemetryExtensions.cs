@@ -5,7 +5,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Exporter;
 using static Backend.TelemetryConfig.Attributes;
-using static Backend.Common.Metadata;
 using Microsoft.Extensions.Options;
 using Backend.Common;
 

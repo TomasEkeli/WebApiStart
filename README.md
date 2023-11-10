@@ -26,7 +26,37 @@ dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer -c Relea
 
 ## Versioning
 
-[NerdBank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) has been added to the project. This means that the version is automatically updated based on the git history. Control the main numbers of the version in the file `version.json`, in the root of the repository.
+[NerdBank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) has been added to the project. This means that the version is automatically updated based on the git history. Control the main numbers of the version in the file `version.json`, in the root of the repository. The file `Directory.Build.props` tells `msbuild` to use NerdBank.GitVersioning to set the version of the project.
+
+### How to create a new version
+
+The base version-number is controlled by the file `version.json`. If you want to set a specific version you can modify that file's `version` -property. There is a [command-line tool](https://github.com/dotnet/Nerdbank.GitVersioning/blob/main/doc/nbgv-cli.md) to automatically set versions *and* create git-branches with tags for the version. To install it, run the following command:
+
+```bash
+dotnet tool install -g nbgv
+```
+
+Make sure you are on the `main` -branch with no uncommitted changes and in the folder for the project you want to release and run the following command:
+
+```bash
+nbgv prepare-release
+```
+
+This will read the current version from `version.json`, create a new branch for that version with an updated `version.json` without any pre-release -tags, move back to the `main` -branch and incremenet the `version.json` adding a pre-release -tag. It will also create a git-tag for the version.
+
+To move directly to a specific version-number (e.g. 1.2.3), run the following command:
+
+```bash
+nbgv prepare-release --version 1.2.3
+```
+
+To move to the next major version, run the following command:
+
+```bash
+nbgv prepare-release --major
+```
+
+
 
 ## Monitoring
 
