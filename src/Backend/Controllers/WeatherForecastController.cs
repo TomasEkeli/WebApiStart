@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using Backend.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.FeatureManagement;
 
 namespace backend.Controllers;
 
@@ -11,21 +13,28 @@ public class WeatherForecastController : ControllerBase
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
+    readonly IFeatureManager _features;
+    readonly ILogger<WeatherForecastController> _logger;
 
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(
+        IFeatureManager features,
+        ILogger<WeatherForecastController> logger)
     {
+        _features = features;
         _logger = logger;
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
+    public async Task<IEnumerable<WeatherForecast>> Get()
     {
         using var activity = Activity.Current?.Source.StartActivity("GetWeatherForecast");
 
         _logger.LogInformation("Get the weather");
-        var weather = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+
+        var clipped = await _features.IsEnabledAsync(FeatureFlags.ClippedForecasts);
+        var numberOfDays = clipped ? 3 : 5;
+
+        var weather = Enumerable.Range(1, numberOfDays).Select(index => new WeatherForecast
         {
             Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             TemperatureC = Random.Shared.Next(-20, 55),

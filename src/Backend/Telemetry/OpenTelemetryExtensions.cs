@@ -5,7 +5,9 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Exporter;
 using static Backend.TelemetryConfig.Attributes;
+using static Backend.Common.Metadata;
 using Microsoft.Extensions.Options;
+using Backend.Common;
 
 namespace Backend.Telemetry;
 
@@ -180,19 +182,9 @@ public static class OpenTelemetryExtensions
                 {
                     new(Service.Host, Environment.MachineName),
                     new(Service.Environment, environment.EnvironmentName),
-                    new(Service.Version, CurrentVersion())
+                    new(Service.Version, Metadata.CurrentVersion())
                 }
             );
-
-    static string CurrentVersion()
-    {
-        return typeof(OpenTelemetryExtensions)
-            .Assembly
-            .GetName()
-            .Version
-            ?.ToString()
-            ?? "unknown";
-    }
 
     static WebApplicationBuilder ConfigureTelemetry(
         this WebApplicationBuilder builder)

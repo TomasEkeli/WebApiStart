@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="dapper" Version="2.1.15" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
+    <PackageReference Include="microsoft.featuremanagement" Version="3.0.0" />
     <PackageReference Include="npgsql" Version="7.0.6" />
     <PackageReference Include="npgsql.opentelemetry" Version="7.0.6" />
     <PackageReference Include="opentelemetry" Version="1.6.0" />
