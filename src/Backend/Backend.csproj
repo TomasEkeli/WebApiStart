@@ -17,6 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="aspnetcore.healthchecks.npgsql" Version="7.1.0" />
+    <PackageReference Include="aspnetcore.healthchecks.ui.client" Version="7.1.0" />
     <PackageReference Include="dapper" Version="2.1.15" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
     <PackageReference Include="microsoft.featuremanagement" Version="3.0.0" />

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Extensions.Options;
 
 namespace Backend.Db;
 
@@ -30,7 +31,13 @@ public static class DbSetupExtensions
 
         services
             .AddHealthChecks()
-            .AddCheck<DatabaseAvailableHealthCheck>("Database");
+            .AddNpgSql(
+                serviceProvider => serviceProvider
+                    .GetRequiredService<IOptions<DbSettings>>()
+                    .Value
+                    .ConnectionString,
+                tags: new[] { "database" }
+            );
 
         return services;
     }
