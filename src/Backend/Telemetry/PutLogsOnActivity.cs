@@ -3,7 +3,8 @@ using OpenTelemetry;
 using OpenTelemetry.Logs;
 
 namespace Backend.Telemetry;
-public class ConvertLogRecordsToEvents : BaseProcessor<LogRecord>
+
+public class PutLogsOnActivity : BaseProcessor<LogRecord>
 {
     public override void OnEnd(LogRecord data)
     {

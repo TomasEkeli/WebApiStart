@@ -1,5 +1,6 @@
 using Backend;
 using Backend.Db;
+using Backend.Monitoring;
 using Backend.Telemetry;
 using Microsoft.FeatureManagement;
 
@@ -25,6 +26,8 @@ app.UseSwaggerUI();
 app.MapMonitoringEndpoints();
 
 app.MapControllers();
+
+app.MapGet("/", () => "Don't look at my back-end!");
 
 await app.InitializeDatabase();
 

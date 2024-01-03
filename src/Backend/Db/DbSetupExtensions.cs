@@ -36,7 +36,7 @@ public static class DbSetupExtensions
                     .GetRequiredService<IOptions<DbSettings>>()
                     .Value
                     .ConnectionString,
-                tags: new[] { "database" }
+                tags: new[] { "database", "ready" }
             );
 
         return services;

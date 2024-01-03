@@ -16,11 +16,12 @@ namespace Backend.Tests;
  */
 public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    const string default_host = "db";
-    const string default_port = "5432";
-    const string default_database = "postgres";
-    const string default_username = "postgres";
-    const string default_password = "postgres";
+    const string Default_host = "db";
+    const string Default_port = "5432";
+    const string Default_database = "postgres";
+    const string Default_username = "postgres";
+    const string Default_password = "postgres";
+    const int Default_timeout = 500;
 
     readonly string _test_database_id = Guid.NewGuid().ToString("N");
     string Database_name => $"test_{_test_database_id}";
@@ -28,9 +29,10 @@ public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         using var connection = new NpgsqlConnection(GetConnectionString());
-
-        connection.Execute($"create database {Database_name};");
-        connection.Close();
+        connection.Execute(
+            sql: $"create database {Database_name};",
+            commandTimeout: Default_timeout
+        );
 
         builder.ConfigureTestServices(
             service_collection =>
@@ -45,22 +47,18 @@ public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
 
     public async Task DropDatabase()
     {
-        using var connection = new NpgsqlConnection(GetConnectionString());
         try
         {
-            var drop_if_exists = $@"
-                drop database if exists {Database_name} with (force);
-            ";
+            using var connection = new NpgsqlConnection(GetConnectionString());
 
-            await connection.ExecuteAsync(drop_if_exists);
+            await connection.ExecuteAsync(
+                sql: $@"drop database if exists {Database_name} with (force);",
+                commandTimeout: Default_timeout
+            );
         }
         catch (PostgresException ex) when (ex.SqlState == "3D000")
         {
             // already dropped - that's OK
-        }
-        finally
-        {
-            connection.Close();
         }
     }
 
@@ -72,55 +70,39 @@ public class Backend_with_db : WebApplicationFactory<Program>, IAsyncLifetime
     public async static Task DropAllTestDatabases()
     {
         using var connection = new NpgsqlConnection(GetConnectionString());
-        try
-        {
-            const string drop_if_exists = @"
-                select 'drop database if exists ' || datname || ' with (force);'
-                from pg_database
-                where datname like 'test_%';
-            ";
 
-            var drop_statements = await connection.QueryAsync<string>(
-                drop_if_exists
-            );
+        var drop_statements = await connection.QueryAsync<string>(
+            sql: "select 'drop database if exists ' || datname || ' with (force);' " +
+                "from pg_database " +
+                "where datname like 'test_%';",
+            commandTimeout: Default_timeout
+        );
 
-            foreach (var drop_statement in drop_statements)
-            {
-                await connection.ExecuteAsync(drop_statement);
-            }
-        }
-        finally
+        foreach (var drop_statement in drop_statements)
         {
-            connection.Close();
+            await connection.ExecuteAsync(drop_statement);
         }
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
 
-    public new Task DisposeAsync()
+    public new async Task DisposeAsync()
     {
-        Dispose();
-        return Task.CompletedTask;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        DropDatabase().Wait();
-        base.Dispose(disposing);
+        await DropDatabase();
     }
 
     static string GetConnectionString()
     {
         // Environment-variables take precedence
 
-        var host = GetEnvironmentVariable("AdminDb__host") ?? default_host;
-        var port = GetEnvironmentVariable("AdminDb__port") ?? default_port;
+        var host = GetEnvironmentVariable("AdminDb__host") ?? Default_host;
+        var port = GetEnvironmentVariable("AdminDb__port") ?? Default_port;
         var database = GetEnvironmentVariable("AdminDb__database")
-            ?? default_database;
+            ?? Default_database;
         var username = GetEnvironmentVariable("AdminDb__username")
-            ?? default_username;
+            ?? Default_username;
         var password = GetEnvironmentVariable("AdminDb__password")
-            ?? default_password;
+            ?? Default_password;
 
         return $"Host={host};" +
             $"Port={port};" +

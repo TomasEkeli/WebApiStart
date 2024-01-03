@@ -2,13 +2,18 @@ using System.Net.Http.Json;
 
 namespace Backend.Tests;
 
-public class FeatureSwitching : TestWithBackend
+public class Since_clipped_weather_is_fifty_percent_on : TestWithBackend
 {
     [Fact]
-    public async Task Get_weatherforecast_returns_clipped_forecast_sometimes()
+    public async Task About_half_the_forecasts_are_clipped()
     {
         // call the endpoint 100 times - we should get a mix of 3 and 5 day forecasts
-        var tasks = Enumerable.Range(0, 25).Select(_ => _api.GetFromJsonAsync<IEnumerable<Forecast>>("/weatherforecast"));
+        // this feature is set in appsettings.json in the Backend project
+        var tasks = Enumerable
+            .Range(0, 25)
+            .Select(_ =>
+                _api.GetFromJsonAsync<IEnumerable<Forecast>>("/weatherforecast")
+            );
         var responses = await Task.WhenAll(tasks);
 
         var clipped = responses.Count(r => r!.Count() < 5);

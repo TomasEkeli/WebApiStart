@@ -1,7 +1,7 @@
 using Backend.Common;
 using HealthChecks.UI.Client;
 
-namespace Backend;
+namespace Backend.Monitoring;
 
 public static class MonitoringEndpoints
 {
@@ -18,6 +18,12 @@ public static class MonitoringEndpoints
       {
         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
       });
-    app.MapHealthChecks("/readyz");
+    app.MapHealthChecks(
+      "/readyz",
+      new()
+      {
+          Predicate = check => check.Tags.Contains("ready"),
+          ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+      });
   }
 }

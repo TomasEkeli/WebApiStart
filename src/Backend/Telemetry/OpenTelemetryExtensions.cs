@@ -27,9 +27,9 @@ public static class OpenTelemetryExtensions
         builder.ConfigureTelemetry();
         _config = builder.GetTelemetryConfig();
 
-        builder.TraceWithOtel(exportToConsole);
-        builder.LogWithOtel(exportToConsole);
-        builder.ExportMetricsWithOthel(exportToConsole);
+        builder.AddOtelTraces(exportToConsole);
+        builder.AddOtelLogging(exportToConsole);
+        builder.AddOtelMetrics(exportToConsole);
 
         return builder;
     }
@@ -46,7 +46,7 @@ public static class OpenTelemetryExtensions
      * </para>
      * </summary>
      */
-    public static WebApplicationBuilder LogWithOtel(
+    public static WebApplicationBuilder AddOtelLogging(
         this WebApplicationBuilder builder,
         bool exportToConsole = true)
     {
@@ -60,12 +60,12 @@ public static class OpenTelemetryExtensions
 
             var resourceBuilder = ResourceBuilder
                 .CreateDefault()
-                .AddServiceWithAttributes(builder.Environment);
+                .AddService(builder.Environment);
 
             logging
                 .SetResourceBuilder(resourceBuilder)
-                .AddProcessor(new ConvertLogRecordsToEvents())
-                .AddOtlpExporter(_ => _.ExportToConfigured());
+                .AddProcessor(new PutLogsOnActivity())
+                .AddOtlpExporter(_ => _.ToConfiguredEndpoint());
 
             if (exportToConsole)
             {
@@ -88,7 +88,7 @@ public static class OpenTelemetryExtensions
      * </para>
      * </summary>
      */
-    public static WebApplicationBuilder TraceWithOtel(
+    public static WebApplicationBuilder AddOtelTraces(
         this WebApplicationBuilder appBuilder,
         bool exportToConsole = true)
     {
@@ -96,7 +96,7 @@ public static class OpenTelemetryExtensions
             .AddOpenTelemetry()
             .ConfigureResource(otel =>
                 otel
-                    .AddServiceWithAttributes(appBuilder.Environment)
+                    .AddService(appBuilder.Environment)
                 )
             .WithTracing(tracing =>
             {
@@ -106,7 +106,7 @@ public static class OpenTelemetryExtensions
                     )
                     .AddHttpClientInstrumentation()
                     .AddNpgsql()
-                    .AddOtlpExporter(_ => _.ExportToConfigured());
+                    .AddOtlpExporter(_ => _.ToConfiguredEndpoint());
 
                 if (exportToConsole)
                 {
@@ -137,22 +137,21 @@ public static class OpenTelemetryExtensions
      * </para>
      * </summary>
      */
-    public static WebApplicationBuilder ExportMetricsWithOthel(
+    public static WebApplicationBuilder AddOtelMetrics(
         this WebApplicationBuilder appBuilder,
         bool exportToConsole = true)
     {
         appBuilder.Services
             .AddOpenTelemetry()
             .ConfigureResource(otel =>
-                otel
-                    .AddServiceWithAttributes(appBuilder.Environment)
+                    otel.AddService(appBuilder.Environment)
                 )
             .WithMetrics(metrics =>
             {
                 metrics
                     .AddAspNetCoreInstrumentation()
                     .AddMeter(MetricsConfig.Meter.Name)
-                    .AddOtlpExporter(_ => ExportToConfigured(_));
+                    .AddOtlpExporter(_ => ToConfiguredEndpoint(_));
 
                 if (exportToConsole)
                 {
@@ -171,7 +170,7 @@ public static class OpenTelemetryExtensions
         return appBuilder;
     }
 
-    static ResourceBuilder AddServiceWithAttributes(
+    static ResourceBuilder AddService(
         this ResourceBuilder builder,
         IWebHostEnvironment environment) =>
         builder
@@ -191,7 +190,11 @@ public static class OpenTelemetryExtensions
         builder
             .Services
             .AddOptions<OpenTelemetryExportConfig>()
-            .Bind(builder.Configuration.GetSection(OpenTelemetryExportConfig.Section))
+            .Bind(
+                builder.Configuration.GetSection(
+                    OpenTelemetryExportConfig.Section
+                )
+            )
             .ValidateDataAnnotations();
 
         return builder;
@@ -205,7 +208,7 @@ public static class OpenTelemetryExtensions
             .GetRequiredService<IOptions<OpenTelemetryExportConfig>>()
             .Value;
 
-    static OtlpExporterOptions ExportToConfigured(
+    static OtlpExporterOptions ToConfiguredEndpoint(
         this OtlpExporterOptions options)
     {
         if (_config?.Endpoint is not null)

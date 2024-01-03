@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Backend.Tests;
+namespace Backend.Tests.Monitoring;
 
 public class Monitoring_endpoints_with_database : TestWithBackend
 {
